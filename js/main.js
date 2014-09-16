@@ -17,7 +17,7 @@ var DIAMONDDASH = DIAMONDDASH || {};
             blockColor: 0,      //0:赤、1:黄、2:紫、3:緑、4:青
             blockX: 0,          //ブロックのX座標（0〜6）
             blockY: 0,          //ブロックのY座標（0〜7）
-            id: '0_0',          //ブロックの座標を表すID
+            id: 'id0_0',          //ブロックの座標を表すID
             erasable: false,    //消せるかどうか
             group: undefined    //消せるブロックグループ
         }
@@ -26,116 +26,129 @@ var DIAMONDDASH = DIAMONDDASH || {};
     ns.BlockCollection = Backbone.Collection.extend({
         model: ns.BlockModel,
         properties: {
-            blockListX: 7,       //列の数
-            blockListY: 8,       //行の数
-            delteBlocksCount: 0 //消したブロックの総数
+            blockListX: 7,      //列の数
+            blockListY: 16,     //行の数（表示するブロックの２倍）
+            gameScore: 0,       //スコア
+            resetFlg: false  //消えるブロックがひとつもない時のリセット管理に使うフラグ
         },
-        initialize: function() {
+        initialize: function(blockListView, restart) {
             this.collection = this.createBlockModels();
-            this.updateErasables();
+            this.updateErasables(blockListView, restart);
         },
-        //ブロックカラーをランダムで設定するメソッド
+        //ブロックModelを作って返すメソッド
         createBlockModels: function() {
-            for(var x = 0; x < 7; x ++) {
+            for(var x = 0; x < this.properties.blockListX; x ++) {
                 this.models[x] = [];
-                for(var y = 0; y < 8; y ++) {
-                    id = x + (y * 7);
+                for(var y = 0; y < this.properties.blockListY; y ++) {
+                    id = x + (y * this.properties.blockListX);
                     var r = Math.round(Math.random() * 4);
-                    var blockModel = new ns.BlockModel({id: x +'_'+ y, blockColor: r, blockX: x, blockY: y});
+                    var blockModel = new ns.BlockModel({id: 'id' + x +'_'+ y, blockColor: r, blockX: x, blockY: y});
                     this.models[x][y] = blockModel;
                 }
             }
             return this;
         },
         //ブロックが消えるかどうか判定
-        updateErasables: function() {
+        updateErasables: function(blockListView, restart) {
             var group = 0;                  //グループID定義
-            var checkFlg = new Array(7);    //チェック済みか管理するフラグ配列定義（7×8）
-            for(var i = 0; i < 7; i++) {
-                checkFlg[i] = new Array(8);
+            var checkFlg = new Array(this.properties.blockListX);    //チェック済みか管理するフラグ配列定義（7×16）
+            var erasableBlockCount = 0; //消せるブロックの数
+            for(var i = 0; i < this.properties.blockListX; i++) {
+                checkFlg[i] = new Array(this.properties.blockListX + 1);
             }
-            for(var y = 0; y < 8; y ++) {
-                for(var x = 0; x < 7; x ++) {
-                    if(this.models[x][y] != undefined) {
-                       this.models[x][y].set('erasable', false);
-                       this.models[x][y].set('group', undefined);
-                    }
+            for(var y = (this.properties.blockListY / 2); y < this.properties.blockListY; y ++) {
+                for(var x = 0; x < this.properties.blockListX; x ++) {
+                    if(this.models[x][y] == undefined) continue;
+                    this.models[x][y].set('erasable', false);
+                    this.models[x][y].set('group', undefined);
                 }
             }
             var firstFlg = 0;
-            for(var y = 0; y < 8; y ++) {
-                for(var x = 0; x < 7; x ++) {
+            for(var y = (this.properties.blockListY / 2); y < this.properties.blockListY; y ++) {
+                for(var x = 0; x < this.properties.blockListX; x ++) {
                     var sameBlockCount = 0; //繋がっている同じブロックの総数
                     //周りのブロック判定メソッド
-                    if(this.models[x][y] != undefined) {
-                        (function checkAroundBlock(self,x,y) {
-                            //上のブロックと比較
-                            if(y > 0 && self.models[x][y - 1] != undefined) {
-                                if(self.models[x][y].get('blockColor') == self.models[x][y - 1].get('blockColor')) {
-                                    if(self.models[x][y - 1].get('group') == undefined && checkFlg[x][y - 1] == undefined) {
-                                        checkFlg[x][y - 1] = 1;
-                                        sameBlockCount ++;
-                                        if(sameBlockCount >= 3) {
-                                            self.models[x][y].set('group',group);
-                                            self.models[x][y - 1].set('group',group);
-                                        }
-                                        checkAroundBlock(self, x, y - 1);
+                    if(this.models[x][y] == undefined) continue;
+                    (function checkAroundBlock(self,x,y) {
+                        //上のブロックと比較
+                        if(y > (self.properties.blockListY / 2) && self.models[x][y - 1] != undefined) {
+                            if(self.models[x][y].get('blockColor') == self.models[x][y - 1].get('blockColor')) {
+                                if(self.models[x][y - 1].get('group') == undefined && checkFlg[x][y - 1] == undefined) {
+                                    checkFlg[x][y - 1] = 1;
+                                    sameBlockCount ++;
+                                    if(sameBlockCount >= 3) {
+                                        self.models[x][y].set('group',group);
+                                        self.models[x][y - 1].set('group',group);
+                                        erasableBlockCount ++;
                                     }
+                                    checkAroundBlock(self, x, y - 1);
                                 }
                             }
-                            //左のブロックと比較
-                            if(x > 0 && self.models[x - 1][y] != undefined) {
-                                if(self.models[x][y].get('blockColor') == self.models[x - 1][y].get('blockColor')) {
-                                    if(self.models[x - 1][y].get('group') == undefined && checkFlg[x - 1][y] == undefined) {
-                                        checkFlg[x - 1][y] = 1;
-                                        sameBlockCount ++;
-                                        if(sameBlockCount >= 3) {
-                                            self.models[x][y].set('group',group);
-                                            self.models[x - 1][y].set('group',group);
-                                        }
-                                        checkAroundBlock(self, x - 1, y);
+                        }
+                        //左のブロックと比較
+                        if(x > 0 && self.models[x - 1][y] != undefined) {
+                            if(self.models[x][y].get('blockColor') == self.models[x - 1][y].get('blockColor')) {
+                                if(self.models[x - 1][y].get('group') == undefined && checkFlg[x - 1][y] == undefined) {
+                                    checkFlg[x - 1][y] = 1;
+                                    sameBlockCount ++;
+                                    if(sameBlockCount >= 3) {
+                                        self.models[x][y].set('group',group);
+                                        self.models[x - 1][y].set('group',group);
+                                        erasableBlockCount ++;
                                     }
+                                    checkAroundBlock(self, x - 1, y);
                                 }
                             }
-                            //右のブロックと比較
-                            if(x < 6 && self.models[x + 1][y] != undefined) {
-                                if(self.models[x][y].get('blockColor') == self.models[x + 1][y].get('blockColor')) {
-                                    if(self.models[x + 1][y].get('group') == undefined && checkFlg[x + 1][y] == undefined) {
-                                        checkFlg[x + 1][y] = 1;
-                                        sameBlockCount ++;
-                                        if(sameBlockCount >= 3) {
-                                            self.models[x][y].set('group',group);
-                                            self.models[x + 1][y].set('group',group);
-                                        }
-                                        checkAroundBlock(self, x + 1, y);
+                        }
+                        //右のブロックと比較
+                        if(x < self.properties.blockListX - 1 && self.models[x + 1][y] != undefined) {
+                            if(self.models[x][y].get('blockColor') == self.models[x + 1][y].get('blockColor')) {
+                                if(self.models[x + 1][y].get('group') == undefined && checkFlg[x + 1][y] == undefined) {
+                                    checkFlg[x + 1][y] = 1;
+                                    sameBlockCount ++;
+                                    if(sameBlockCount >= 3) {
+                                        self.models[x][y].set('group',group);
+                                        self.models[x + 1][y].set('group',group);
+                                        erasableBlockCount ++;
                                     }
+                                    checkAroundBlock(self, x + 1, y);
                                 }
                             }
-                            //下のブロックと比較
-                            if(y < 7 && self.models[x][y + 1] != undefined) {
-                                if(self.models[x][y].get('blockColor') == self.models[x][y + 1].get('blockColor')) {
-                                    if(self.models[x][y + 1].get('group') == undefined && checkFlg[x][y + 1] == undefined) {
-                                        checkFlg[x][y + 1] = 1;
-                                        sameBlockCount ++;
-                                        if(sameBlockCount >= 3) {
-                                            self.models[x][y].set('group',group);
-                                            self.models[x][y + 1].set('group',group);
-                                        }
-                                        checkAroundBlock(self, x, y + 1);
+                        }
+                        //下のブロックと比較
+                        if(y < self.properties.blockListY - 1 && self.models[x][y + 1] != undefined) {
+                            if(self.models[x][y].get('blockColor') == self.models[x][y + 1].get('blockColor')) {
+                                if(self.models[x][y + 1].get('group') == undefined && checkFlg[x][y + 1] == undefined) {
+                                    checkFlg[x][y + 1] = 1;
+                                    sameBlockCount ++;
+                                    if(sameBlockCount >= 3) {
+                                        self.models[x][y].set('group',group);
+                                        self.models[x][y + 1].set('group',group);
+                                        erasableBlockCount ++;
                                     }
+                                    checkAroundBlock(self, x, y + 1);
                                 }
                             }
-                            if(sameBlockCount >= 3) {
-                                self.models[x][y].set('group', group);
-                                self.models[x][y].set('erasable', true);
-                            }
-                        })(this,x,y);
-                    }
+                        }
+                        if(sameBlockCount >= 3) {
+                            self.models[x][y].set('group', group);
+                            self.models[x][y].set('erasable', true);
+                        }
+                    })(this,x,y);
                     if(sameBlockCount >= 3) {
                         group ++;
                     }
-                    // console.log('座標' + x + ' ' + y + ' erasable = ' + self.models[x][y].get('erasable'));
                 }
+            }
+            if(erasableBlockCount == 0) {
+                alert('消せるブロックがひとつも無いので、シャッフルするよ！');
+                this.properties.resetFlg = true;
+                this.initialize(blockListView, restart);
+            }
+            if(blockListView != undefined && this.properties.resetFlg == true) {
+                setTimeout(function() {blockListView.$el.empty();}, 50);
+                setTimeout(function(){blockListView.blockListSet();}, 100);
+                this.properties.resetFlg = false;
             }
         }
     });
@@ -153,7 +166,6 @@ var DIAMONDDASH = DIAMONDDASH || {};
         tagName: 'li',
         className: 'block',
         initialize: function(options) {
-            // options.on('change:erasable', this.render);
         },
         events: {
             'click': 'clickHandler',
@@ -162,11 +174,6 @@ var DIAMONDDASH = DIAMONDDASH || {};
             this.trigger('blockClick', event, this);
         },
         render: function(self) {
-            // console.log(self);
-            // var blockView = new ns.BlockView(self);
-            // console.log(blockView);
-            // $('#' + self.get('blockX') + '_' + self.get('blockY')).html(blockView.el);
-            // return this;
         }
     });
 })(this);
@@ -183,20 +190,16 @@ var DIAMONDDASH = DIAMONDDASH || {};
     ns.BlockListView = Backbone.View.extend({
         initialize: function() {
             this.collection = new ns.BlockCollection();
-            this.render();
-        },
-        render: function() {
             this.blockListSet();
         },
         //ブロックの初期配置処理
         blockListSet: function() {
             var lis = [];
-            id = 0;
-            for(var y = 0; y < 8; y ++) {
-                for(var x = 0; x < 7; x ++) {
+            var id = 0;
+            for(var y = 0; y < this.collection.properties.blockListY; y ++) {
+                for(var x = 0; x < this.collection.properties.blockListX; x ++) {
                     lis[id] = new ns.BlockView(this.collection.models[x][y]);
                     lis[id].$el.addClass("type_" + lis[id].attributes.blockColor);
-
                     //消えるブロックを分かり易くする一時処理（デバッグ用）
                     // if(lis[id].attributes.erasable == true) {
                     //     lis[id].$el.addClass('erasable');
@@ -209,44 +212,45 @@ var DIAMONDDASH = DIAMONDDASH || {};
         },
         //３つ以上隣接してるブロックグループを消去
         blockGroupDelete: function(event, self) {
-            // console.log('group=' + self.attributes.group);
-            // console.log('消える？' + self.attributes.erasable);
-            // console.log(this);
-            // console.log(self);
             var deletedBlocks = []; //消したブロックの座標情報
             var i = 0;
-            for(var y = 0; y < 8; y ++) {
-                for(var x = 0; x < 7; x ++) {
+            for(var y = 0; y < this.collection.properties.blockListY; y ++) {
+                for(var x = 0; x < this.collection.properties.blockListX; x ++) {
                     // console.log(this.models[x][y].get('group'));
-                    if(this.collection.models[x][y] != undefined) {
-                        if(this.collection.models[x][y].get('group') != undefined) {
-                            if(this.collection.models[x][y].get('group') == self.attributes.group && this.collection.models[x][y].get('erasable') == true) {
-                                $('#' + x + '_' + y).addClass('hidden');
-                                deletedBlocks[i] = [];
-                                deletedBlocks[i].push(x,y);
-                                i++;
-                            } 
-                        }
-                    }
+                    if(this.collection.models[x][y] == undefined) continue;
+                    if(this.collection.models[x][y].get('group') == undefined) continue;
+                    if(this.collection.models[x][y].get('group') == self.attributes.group && this.collection.models[x][y].get('erasable') == true) {
+                        var expTop = Number($('#id' + x + '_' + y).css('top').slice(0, -2)) - 10;
+                        var expLeft = Number($('#id' + x + '_' + y).css('left').slice(0, -2)) - 10;
+                        this.$el.append('<li id="exp' + this.collection.models[x][y].get('group') + '" class="explosion" style="top:'+expTop+'px; left:'+expLeft+'px;"></li>');   //爆発エフェクト追加
+                        var expId = this.collection.models[x][y].get('group');
+                        $('#id' + x + '_' + y).remove();
+                        delete this.collection.models[x][y];
+                        deletedBlocks[i] = [];
+                        deletedBlocks[i].push(x,y);
+                        i++;
+                    } 
                 }
             }
+            setTimeout(function() {$('#exp' + expId + '.explosion').remove();}, 600); //爆発エフェクト削除
+            this.collection.properties.gameScore += Math.pow(deletedBlocks.length, 3);
+            $('#score_status').text(this.collection.properties.gameScore);
             this.blockFall(deletedBlocks, self);
         },
         //ブロックの落下処理
         blockFall: function(deletedBlocks, view) {
-            self = this;
             var blockXY = this.setFallBlock(deletedBlocks);
             this.blockFallRender(view, blockXY);
         },
         //X座標毎に落下するブロックの数と座標を設定する処理
         setFallBlock: function(deletedBlocks) {
-            var x = [];
-            var y_x = [];
-            for(var i = 0; i <= 6; i++) {
-               x[i] = 0;    //各x座標毎の落下数を入れる変数定義
-               y_x[i] = []; //消えたブロックのあるx座標の内、最小のy座標の候補を入れる変数
+            var x = [];     //X座標毎の落下数を入れる配列
+            var y_x = [];   //X座標毎の落下するブロックの座標を入れる配列
+            for(var i = 0; i < this.collection.properties.blockListX; i++) {
+               x[i] = 0;
+               y_x[i] = [];
             }
-            _.each(deletedBlocks,function(num) {
+            _.each(deletedBlocks, function(num) {
                 switch(num[0]) {
                     case 0:
                         x[0] ++;
@@ -282,57 +286,82 @@ var DIAMONDDASH = DIAMONDDASH || {};
         },
         //実際の落下処理（レンダリングとmodelの更新）
         blockFallRender: function(view, blockXY) {
-            var fallY_max = 0;  //そのX座標上で消えるブロック内で最大のY座標
-            var fallY_now = 0;  //チェック中のブロックのY座標を入れる変数
-            var fallY_min = 0;  //そのX座標上で消えるブロック内で最小のY座標-1を入れる変数
-            var fallCount = 0;  //そのX軸上で落としたブロックの数を入れる変数
-            var tempY = 0;      //元のY位置を記憶しておく変数
-            for(n = 0; n <= 6; n ++) {
+            var fallY_max;      //そのX座標上で消えるブロック内で最大のY座標
+            var fallY_now;      //チェック中のブロックのY座標を入れる変数
+            var fallY_min;      //そのX座標上で消えるブロック内で最小のY座標-1を入れる変数
+            var fallCount;      //そのX軸上で落としたブロックの数を入れる変数
+            var tempY;          //ブロックの元のY位置(px)を記憶しておく変数
+            var emptyBlocks = [];   //ブロック落下後に空白になる座標を入れる配列
+            var addBlocks = []; //空白になった後にブロックが落下し、再び空でなくなった座標
+            for(n = 0; n < this.collection.properties.blockListX; n ++) {
                 if(blockXY[0][n] != 0) {
                     //コの字型にブロックを消した際の処理
                     fallY_max = _.max(blockXY[1][n]); //そのX座標上で消えるブロック内で最大のY座標
                     fallY_now = fallY_max;
                     fallY_min = _.min(blockXY[1][n]) - 1; //そのX座標上で消えるブロック内で最小のY座標-1
                     fallCount = 0;  //そのX軸上で落としたブロックの数
-                    while(fallY_now > fallY_min) {
-                        if(self.collection.models[n][fallY_now] != undefined) {
-                            if(self.collection.models[n][fallY_now].get('group') != view.attributes.group) {
-                                tempY = $('#'+n+'_'+fallY_now).css('top');  //元のY位置を取得
-                                tempY = Number(tempY.slice(0, -2));
-                                $('#'+n+'_'+fallY_now).css('top', tempY + (40 * (fallY_max - fallY_now - fallCount)));
-                                $('#'+n+'_'+fallY_now).attr('id', n + '_' + (fallY_max - fallCount)); //IDを更新
-                                tempY = self.collection.models[n][fallY_now].get('blockY')
-                                self.collection.models[n][fallY_now].set('blockY', (fallY_max - fallCount));     //modelのY座標を更新
-                                self.collection.models[n][fallY_now].set('id', n + '_' + (fallY_max - fallCount));     //modelのIDを更新
-                                self.collection.models[n][(fallY_max - fallCount)] = self.collection.models[n][fallY_now];  //落下先のブロックのmodelを上書き
-                                delete self.collection.models[n][fallY_now];   //落下元のブロックのmodelを削除
-                                fallCount ++;
-                            }
-                        }
-                        fallY_now --;
+                    for(fallY_now; fallY_now > fallY_min; fallY_now --) {
+                        if(this.collection.models[n][fallY_now] == undefined) continue;
+                        if(this.collection.models[n][fallY_now].get('group') == view.attributes.group) continue;
+                        $('#id'+n+'_'+fallY_now).attr('id', 'id' + n + '_' + (fallY_max - fallCount)); //IDを更新
+                        tempY = this.collection.models[n][fallY_now].get('blockY')
+                        this.collection.models[n][fallY_now].set('blockY', (fallY_max - fallCount));     //modelのY座標を更新
+                        this.collection.models[n][fallY_now].set('id', 'id' + n + '_' + (fallY_max - fallCount));     //modelのIDを更新
+                        this.collection.models[n][(fallY_max - fallCount)] = this.collection.models[n][fallY_now];  //落下先のブロックのmodelを上書き
+                        delete this.collection.models[n][fallY_now];   //落下元のブロックのmodelを削除
+                        emptyBlocks.push([n, fallY_now]);
+                        addBlocks.push([n, (fallY_max - fallCount)]);
+                        fallCount ++;
                     }
-                    while(fallY_min >= 0) {
+                    for(fallY_min; fallY_min >= 0; fallY_min --) {
                         //そのX座標のブロックの内、消えたブロックの最小のYより上にあるブロックに対する落下処理
-                        if(self.collection.models[n][fallY_min] != undefined) {
-                            tempY = $('#'+n+'_'+fallY_min).css('top');  //元のY位置を取得
-                            tempY = Number(tempY.slice(0, -2));
-                            $('#'+n+'_'+fallY_min).css('top', tempY + (40 * blockXY[0][n]));
-                            $('#'+n+'_'+fallY_min).attr('id', n + '_' + (fallY_min + blockXY[0][n])); //IDを更新
-                            tempY = self.collection.models[n][fallY_min].get('blockY')
-                            self.collection.models[n][fallY_min].set('blockY', (fallY_min + blockXY[0][n]));     //modelのY座標を更新
-                            self.collection.models[n][fallY_min].set('id', n + '_' + (fallY_min + blockXY[0][n]));     //modelのIDを更新
-                            self.collection.models[n][(fallY_min + blockXY[0][n])] = self.collection.models[n][fallY_min];  //落下先のブロックのmodelを上書き
-                            delete self.collection.models[n][fallY_min];   //落下元のブロックのmodelを削除
-                        }
-                        fallY_min --;
+                        if(this.collection.models[n][fallY_min] == undefined) continue;
+                        $('#id'+n+'_'+fallY_min).attr('id', 'id' + n + '_' + (fallY_min + blockXY[0][n])); //IDを更新
+                        tempY = this.collection.models[n][fallY_min].get('blockY')
+                        this.collection.models[n][fallY_min].set('blockY', (fallY_min + blockXY[0][n]));     //modelのY座標を更新
+                        this.collection.models[n][fallY_min].set('id', 'id' + n + '_' + (fallY_min + blockXY[0][n]));     //modelのIDを更新
+                        this.collection.models[n][(fallY_min + blockXY[0][n])] = this.collection.models[n][fallY_min];  //落下先のブロックのmodelを上書き
+                        delete this.collection.models[n][fallY_min];   //落下元のブロックのmodelを削除
+                        emptyBlocks.push([n, fallY_min]);
+                        addBlocks.push([n, (fallY_min + blockXY[0][n])]);
                     }
                 }
             }
-            self.collection.updateErasables();            
+            //ブロックが最終的に空白になった座標を割り出す処理
+            _.each(emptyBlocks, function(num, index) {
+                emptyBlocks[index] = num.toString();
+            });
+            _.each(addBlocks, function(num, index) {
+                delete emptyBlocks[_.indexOf(emptyBlocks, num.toString())];
+            });
+            this.collection.updateErasables(this);
+            this.blockMakeMargin(emptyBlocks);
+        },
+        //消した分のブロックの追加
+        blockMakeMargin: function(emptyBlocks) {
+            self = this;
+            var addBlocksArray = [];
+            _.each(emptyBlocks, function(num, index) {
+                addBlocksArray.push(num.split(","));
+            });
+            var id = 0;
+            var lis = [];
+            var r;
+            var blockModel;
+            _.each(addBlocksArray, function(num, index) {
+                id = Number(num[0]) + (Number(num[1]) * self.collection.properties.blockListX);
+                r = Math.round(Math.random() * 4);
+                blockModel = new ns.BlockModel({id: 'id' + Number(num[0]) +'_'+ Number(num[1]), blockColor: r, blockX: Number(num[0]), blockY: Number(num[1])});
+                self.collection.models[Number(num[0])][Number(num[1])] = blockModel;
+                lis[id] = new ns.BlockView(blockModel);
+                lis[id].$el.addClass("type_" + lis[id].attributes.blockColor);
+                lis[id].on('blockClick', $.proxy(self.blockGroupDelete, self));
+                self.$el.append(lis[id].el);
+            });
         }
     });
 })(this);
- 
+
 /**
  * 時間表示のView
  * 
@@ -345,27 +374,36 @@ var DIAMONDDASH = DIAMONDDASH || {};
  
     ns.TimeStatusView = Backbone.View.extend({
         properties: {
-            sec: 0,
+            sec: 60,
             timerId: undefined
         },
-        initialize: function(options) {
+        initialize: function() {
+            this.collection = new ns.BlockCollection();
         },
         start: function() {
             var self = this;
             this.properties.timerId = window.setInterval(function() {
-                self.countUp();
+                self.countDown();
             }, 1000);
         },
         stop: function() {
             window.clearInterval(this.properties.timerId);
         },
-        countUp: function() {
+        countDown: function() {
             var prop = this.properties;
-            prop.sec++;
+            prop.sec--;
             this.render(prop);
+            if(prop.sec == 0) {
+                ns.GameController.prototype.gameClear(this.collection);
+            }
+        },
+        clear: function() {
+            this.stop();
+            this.properties.sec = 60;
+            $('#time_status').html(60);
         },
         render: function(prop) {
-            this.$el.html(prop.sec + '秒');
+            this.$el.html(prop.sec);
         }
     });
 })(this);
@@ -390,35 +428,71 @@ var DIAMONDDASH = DIAMONDDASH || {};
         },
         initialize: function(options) {
             this.options = options;
+            this.initSceneView();
             this.initBlockListView();
             this.initTimeStatusView();
+        },
+        initSceneView: function() {
+            $('#start_scene').on('click', $.proxy(this.gameStart, this));
+            $('#pause_button').on('click', $.proxy(this.gamePause, this));
+            $('#pause_scene').on('click', $.proxy(this.gameRestart, this));
+            $('#onemore_button').on('click', $.proxy(this.oneMorePlay, this));
         },
         initBlockListView: function() {
             this.blockListView = new ns.BlockListView({
                 el: this.options.blockListEl
             });
-            this.blockListView.collection.on('burst', this.gameOver);
-            this.blockListView.collection.on('clear', this.gameClear);
         },
         initTimeStatusView: function() {
             this.timeStatusView = new ns.TimeStatusView({
                 el: this.options.timeStatusEl
             });
         },
-        events: {
-            'click': 'gameStart'
-        },
         gameStart: function() {
+            var self = this;
+            var countNumber = 3;
+            var countDownTimer;
+            var expImg = new Image();   //爆発エフェクト画像のプリロード用
+            $('#start_scene').remove();
             if(this.properties.is_started === false) {
-                this.timeStatusView.start();
+                countDownTimer = window.setInterval(function() {
+                    countNumber --
+                    $('#count_down').html(countNumber);
+                }, 1000);
+                setTimeout(function() {self.timeStatusView.start();}, 3000);
+                setTimeout(function(){$('#countdown_scene').css('display', 'none');}, 3000);
+                setTimeout(function(){window.clearInterval(countDownTimer);}, 3000);
+                expImg.src = 'img/exp.png'; //爆発エフェクト画像を事前にキャッシュしておく
+            } else {
+                self.timeStatusView.start();
             }
             this.properties.is_started = true;
         },
-        gameClear: function() {
-            // gameClear処理
-            this.timeStatusView = new ns.TimeStatusView();
+        gamePause: function() {
             this.timeStatusView.stop();
-            setTimeout("alert('GAME CLEAR!')",200);
+            $('#pause_scene').css('display', 'block');
+        },
+        gameRestart: function() {
+            this.timeStatusView.start();
+            $('#pause_scene').css('display', 'none');
+        },
+        gameClear: function(collection) {
+            // gameClear処理
+            this.properties.is_started = false;
+            this.timeStatusView = new ns.TimeStatusView();
+            this.timeStatusView.clear();
+            $('#clear_scene').css('display', 'block');
+            $('#game_score').html(collection.properties.gameScore);
+            collection.properties.gameScore = 0;
+            $('#score_status').html(0);
+            setTimeout(function(){$('#onemore_button').css('display', 'inline-block');}, 1000);
+        },
+        oneMorePlay: function() {
+            $('#count_down').html(3);
+            $('#countdown_scene').css('display', 'block');
+            $('#clear_scene').css('display', 'none');
+            this.gameStart();
+            $('#onemore_button').css('display', 'none');
         }
     });
 })(this);

@@ -1,55 +1,246 @@
 body {
-  -webkit-touch-callout:none; // リンク長押しのポップアップ(※1)を無効化
-  -webkit-user-select:none; // テキスト長押しの選択ボックス(※2)を無効化
+	-webkit-touch-callout:none; // リンク長押しのポップアップ(※1)を無効化
+	-webkit-user-select:none; // テキスト長押しの選択ボックス(※2)を無効化
+	-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+	tap-highlight-color: rgba(0, 0, 0, 0);
+	width: 320px;
 }
 
-#block_list {
-	width: 280px;
-	height: 320px;
-	border: 0;
-	background-image: url('../img/bg.png');
-	background-size: 100%;
-	background-repeat: no-repeat;
-	padding: 2px 0 0;
-	position: relative;
-	margin: 0 auto;
-	.block {
-		width: 40px;
-		height: 40px;
-		display: inline-block;
-		background-size: 200px 40px;
+button {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+@mixin block_positions($x, $y) {
+	left: $x * 40px;
+	top: $y * 40px;
+}
+
+.start_scene {
+	width: 100%;
+	height: 100%;
+	background-color: black;
+	z-index: 9999;
+	position: absolute;
+	color: yellow;
+	text-align: center;
+	padding-top: 30%;
+}
+
+.countdown_scene {
+	width: 100%;
+	height: 100%;
+	background-color: black;
+	z-index: 9998;
+	position: absolute;
+	color: white;
+	font-size: 36px;
+	text-align: center;
+	padding-top: 50%;
+}
+
+.pause_scene {
+	width: 100%;
+	height: 100%;
+	background-color: black;
+	opacity: 0.9;
+	z-index: 9999;
+	position: absolute;
+	color: white;
+	text-align: center;
+	padding-top: 50%;
+	display: none;
+}
+
+.clear_scene {
+	width: 100%;
+	height: 100%;
+	background-color: black;
+	opacity: 1.0;
+	z-index: 9999;
+	position: absolute;
+	color: white;
+	text-align: center;
+	padding-top: 30%;
+	display: none;
+	.onemore_button {
+		display: none;
+	}
+}
+
+#diamonddash {
+	.front_top {
+		z-index: 3;
+		background-image: url('../img/base_top.png');
+		background-size: 100%;
 		background-repeat: no-repeat;
-		border: 0;
-		margin: -2px 0 -1px 0;
-		position: relative;
+		width: 320px;
+		height: 109px;
+		position: absolute;
 		top: 0;
-		transition-property: top;
-		transition-duration: 0.2s;
-		&.type_0 {
-			background-image: url('../img/blocks.png');
-			background-position: 0 0;
+		.time {
+			display: inline-block;
+			width: 100px;
+			color: white;
+			position: absolute;
+			top: 26px;
+			left: 34px;
 		}
-		&.type_1 {
-			background-image: url('../img/blocks.png');
-			background-position: -40px 0;
+		.score {
+			display: inline-block;
+			width: 150px;
+			text-align: right;
+			color: yellow;
+			position: absolute;
+			top: 26px;
+			left: 30px;
 		}
-		&.type_2 {
-			background-image: url('../img/blocks.png');
-			background-position: -80px 0;
-		}
-		&.type_3 {
-			background-image: url('../img/blocks.png');
-			background-position: -120px 0;
-		}
-		&.type_4 {
-			background-image: url('../img/blocks.png');
-			background-position: -160px 0;
-		}
-		&.hidden {
-			visibility: hidden;
-		}
-		&.erasable {
-			opacity: 0.5;
+		.pause_button {
+			background-image: url('../img/pause_button.png');
+			background-size: 100%;
+			width: 26px;
+			height: 27px;
+			background-color: rgba(0,0,0,0);
+			border: 0;
+			display: inline-block;
+			position: absolute;
+			top: 10px;
+			left: 240px;
 		}
 	}
+	.front_left {
+		z-index: 3;
+		background-image: url('../img/base_left.png');
+		background-size: 100%;
+		background-repeat: no-repeat;
+		width: 20px;
+		height: 320px;
+		position: absolute;
+		top: 109px;
+		left: 0;
+	}
+	.front_right {
+		z-index: 3;
+		background-image: url('../img/base_right.png');
+		background-size: 100%;
+		background-repeat: no-repeat;
+		width: 20px;
+		height: 320px;
+		position: absolute;
+		top: 109px;
+		left: 300px;
+	}
+	.front_bottom {
+		z-index: 3;
+		background-image: url('../img/base_bottom.png');
+		background-size: 100%;
+		background-repeat: no-repeat;
+		width: 320px;
+		height: 21px;
+		position: absolute;
+		top: 429px;
+		left: 0;
+	}
+	.back_space {
+		width: 280px;
+		height: 320px;
+		background-image: url('../img/bg.png');
+		background-size: 100%;
+		background-repeat: no-repeat;
+		margin: 20px auto;
+		position: absolute;
+		top: 89px;
+		left: 20px;
+		z-index: 0;
+	}
+	#block_list {
+		border: 0;
+		padding: 2px 0 0;
+		position: relative;
+		margin: 0 auto;
+		top: -320px;
+		left: 84px;
+		z-index: 2;
+		top: -209px;
+		left: 20px;
+		.block {
+			width: 40px;
+			height: 40px;
+			display: inline-block;
+			background-size: 200px 40px;
+			background-repeat: no-repeat;
+			border: 0;
+			margin: -2px 0 -1px 0;
+			transition-property: top;
+			transition-duration: 0.5s;
+			transition-timing-function: ease-in;
+			position: absolute;
+			&.type_0 {
+				background-image: url('../img/blocks.png');
+				background-position: 0 0;
+			}
+			&.type_1 {
+				background-image: url('../img/blocks.png');
+				background-position: -40px 0;
+			}
+			&.type_2 {
+				background-image: url('../img/blocks.png');
+				background-position: -80px 0;
+			}
+			&.type_3 {
+				background-image: url('../img/blocks.png');
+				background-position: -120px 0;
+			}
+			&.type_4 {
+				background-image: url('../img/blocks.png');
+				background-position: -160px 0;
+			}
+			&.erasable {
+				opacity: 0.5;
+			}
+		}
+		@for $x from 0 through 6 {
+			@for $y from 0 through 15 {
+				#id#{$x}_#{$y} {
+					@include block_positions($x, $y);
+				}
+			}
+		}
+		.explosion {
+			width: 64px;
+			height: 64px;
+			display: inline-block;
+			background-repeat: no-repeat;
+			position: absolute;
+			background-image: url("../img/exp.png");
+			background-position: -256px -256px;
+			-webkit-animation-name: expAnimation;
+			-webkit-animation-duration: 0.6s;
+			-webkit-animation-timing-function: step-start;
+			z-index: 4;
+		}
+	}
+}
+
+@-webkit-keyframes 'expAnimation' {
+     0% { background-position: 0px 0px; }
+   6.0% { background-position: -64px 0px; }    
+  12.0% { background-position: -128px 0px; }
+  18.0% { background-position: -192px 0px; }
+    
+  24.0% { background-position: 0px -64px; }
+  30.0% { background-position: -64px -64px; }    
+  36.0% { background-position: -128px -64px; }
+  42.0% { background-position: -192px -64px; }
+    
+  48.0% { background-position: 0px -128px; }
+  54.0% { background-position: -64px -128px; }    
+  60.0% { background-position: -128px -128px; }
+  66.0% { background-position: -192px -128px; }    
+    
+  72.0% { background-position: 0px -192px; }
+  78.0% { background-position: -64px -192px; }    
+  84.0% { background-position: -128px -192px; }    
+  90.0% { background-position: -192px -192px; }
+  to { background-position: -256px -256px; }
 }
