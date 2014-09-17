@@ -50,11 +50,23 @@ var DIAMONDDASH = DIAMONDDASH || {};
             }
             return this;
         },
-        initCheckFlg: function(){
+        //チェック済み管理用フラグ定義（初期化）
+        initCheckFlg: function() {
             var i;
             this.properties.checkFlg = new Array(this.properties.blockListX);
             for(i=0; i<this.properties.blockListX; i++){
                 this.properties.checkFlg[i] = new Array(this.properties.blockListY)
+            }
+        },
+        //全ブロックのグループID等初期化
+        initBlockGroup: function() {
+            var x, y;
+            for(y = (this.properties.blockListY / 2); y < this.properties.blockListY; y ++) {
+                for(x = 0; x < this.properties.blockListX; x ++) {
+                    if(this.models[x][y] == undefined) continue;
+                    this.models[x][y].set('erasable', false);
+                    this.models[x][y].set('group', undefined);
+                }
             }
         },
         //ブロックが消えるかどうか判定
@@ -64,13 +76,7 @@ var DIAMONDDASH = DIAMONDDASH || {};
             var x, y, i;
             var sameBlockCount = 0; //繋がっている同じブロックの総数
             this.initCheckFlg();
-            for(y = (this.properties.blockListY / 2); y < this.properties.blockListY; y ++) {
-                for(x = 0; x < this.properties.blockListX; x ++) {
-                    if(this.models[x][y] == undefined) continue;
-                    this.models[x][y].set('erasable', false);
-                    this.models[x][y].set('group', undefined);
-                }
-            }
+            this.initBlockGroup();
             for(y = (this.properties.blockListY / 2); y < this.properties.blockListY; y ++) {
                 for(x = 0; x < this.properties.blockListX; x ++) {
                     sameBlockCount = 0;
