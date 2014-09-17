@@ -28,7 +28,8 @@ var DIAMONDDASH = DIAMONDDASH || {};
         properties: {
             blockListX: 7,      //列の数
             blockListY: 16,     //行の数（表示するブロックの２倍）
-            resetFlg: false  //消えるブロックがひとつもない時のリセット管理に使うフラグ
+            resetFlg: false,    //消えるブロックがひとつもない時のリセット管理に使うフラグ
+            checkFlg: []        //ブロックのチェック済み判定管理用配列
         },
         initialize: function(blockListView, restart) {
             this.collection = this.createBlockModels();
@@ -49,17 +50,20 @@ var DIAMONDDASH = DIAMONDDASH || {};
             }
             return this;
         },
+        initCheckFlg: function(){
+            var i;
+            this.properties.checkFlg = new Array(this.properties.blockListX);
+            for(i=0; i<this.properties.blockListX; i++){
+                this.properties.checkFlg[i] = new Array(this.properties.blockListY)
+            }
+        },
         //ブロックが消えるかどうか判定
         updateErasables: function(blockListView, restart) {
             var group = 0;                  //グループID定義
-            var checkFlg = new Array(this.properties.blockListX);    //チェック済みか管理するフラグ配列定義（7×16）
             var erasableBlockCount = 0; //消せるブロックの数
             var x, y, i;
-            var firstFlg = 0;
             var sameBlockCount = 0; //繋がっている同じブロックの総数
-            for(i = 0; i < this.properties.blockListX; i++) {
-                checkFlg[i] = new Array(this.properties.blockListX + 1);
-            }
+            this.initCheckFlg();
             for(y = (this.properties.blockListY / 2); y < this.properties.blockListY; y ++) {
                 for(x = 0; x < this.properties.blockListX; x ++) {
                     if(this.models[x][y] == undefined) continue;
@@ -76,8 +80,8 @@ var DIAMONDDASH = DIAMONDDASH || {};
                         //上のブロックと比較
                         if(y > (self.properties.blockListY / 2) && self.models[x][y - 1] != undefined) {
                             if(self.models[x][y].get('blockColor') == self.models[x][y - 1].get('blockColor')) {
-                                if(self.models[x][y - 1].get('group') == undefined && checkFlg[x][y - 1] == undefined) {
-                                    checkFlg[x][y - 1] = 1;
+                                if(self.models[x][y - 1].get('group') == undefined && self.properties.checkFlg[x][y - 1] == undefined) {
+                                    self.properties.checkFlg[x][y - 1] = 1;
                                     sameBlockCount ++;
                                     if(sameBlockCount >= 3) {
                                         self.models[x][y].set('group',group);
@@ -91,8 +95,8 @@ var DIAMONDDASH = DIAMONDDASH || {};
                         //左のブロックと比較
                         if(x > 0 && self.models[x - 1][y] != undefined) {
                             if(self.models[x][y].get('blockColor') == self.models[x - 1][y].get('blockColor')) {
-                                if(self.models[x - 1][y].get('group') == undefined && checkFlg[x - 1][y] == undefined) {
-                                    checkFlg[x - 1][y] = 1;
+                                if(self.models[x - 1][y].get('group') == undefined && self.properties.checkFlg[x - 1][y] == undefined) {
+                                    self.properties.checkFlg[x - 1][y] = 1;
                                     sameBlockCount ++;
                                     if(sameBlockCount >= 3) {
                                         self.models[x][y].set('group',group);
@@ -106,8 +110,8 @@ var DIAMONDDASH = DIAMONDDASH || {};
                         //右のブロックと比較
                         if(x < self.properties.blockListX - 1 && self.models[x + 1][y] != undefined) {
                             if(self.models[x][y].get('blockColor') == self.models[x + 1][y].get('blockColor')) {
-                                if(self.models[x + 1][y].get('group') == undefined && checkFlg[x + 1][y] == undefined) {
-                                    checkFlg[x + 1][y] = 1;
+                                if(self.models[x + 1][y].get('group') == undefined && self.properties.checkFlg[x + 1][y] == undefined) {
+                                    self.properties.checkFlg[x + 1][y] = 1;
                                     sameBlockCount ++;
                                     if(sameBlockCount >= 3) {
                                         self.models[x][y].set('group',group);
@@ -121,8 +125,8 @@ var DIAMONDDASH = DIAMONDDASH || {};
                         //下のブロックと比較
                         if(y < self.properties.blockListY - 1 && self.models[x][y + 1] != undefined) {
                             if(self.models[x][y].get('blockColor') == self.models[x][y + 1].get('blockColor')) {
-                                if(self.models[x][y + 1].get('group') == undefined && checkFlg[x][y + 1] == undefined) {
-                                    checkFlg[x][y + 1] = 1;
+                                if(self.models[x][y + 1].get('group') == undefined && self.properties.checkFlg[x][y + 1] == undefined) {
+                                    self.properties.checkFlg[x][y + 1] = 1;
                                     sameBlockCount ++;
                                     if(sameBlockCount >= 3) {
                                         self.models[x][y].set('group',group);
