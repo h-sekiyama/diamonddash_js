@@ -173,8 +173,6 @@ var DIAMONDDASH = DIAMONDDASH || {};
         },
         clickHandler: function(event) {
             this.trigger('blockClick', event, this);
-        },
-        render: function(self) {
         }
     });
 })(this);
@@ -207,7 +205,7 @@ var DIAMONDDASH = DIAMONDDASH || {};
                     // if(lis[id].attributes.erasable == true) {
                     //     lis[id].$el.addClass('erasable');
                     // }
-                    lis[id].on('blockClick', $.proxy(this.blockGroupDelete, this));
+                    lis[id].listenTo(lis[id], 'blockClick', $.proxy(this.blockGroupDelete, this));
                     this.$el.append(lis[id].el);
                     id ++;
                 }
@@ -359,7 +357,7 @@ var DIAMONDDASH = DIAMONDDASH || {};
                 self.collection.models[Number(num[0])][Number(num[1])] = blockModel;
                 lis[id] = new ns.BlockView(blockModel);
                 lis[id].$el.addClass("type_" + lis[id].attributes.blockColor);
-                lis[id].on('blockClick', $.proxy(self.blockGroupDelete, self));
+                lis[id].listenTo(lis[id], 'blockClick', $.proxy(self.blockGroupDelete, self));
                 self.$el.append(lis[id].el);
             });
         }
