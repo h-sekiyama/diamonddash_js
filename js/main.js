@@ -36,12 +36,14 @@ var DIAMONDDASH = DIAMONDDASH || {};
         },
         //ブロックModelを作って返すメソッド
         createBlockModels: function() {
-            for(var x = 0; x < this.properties.blockListX; x ++) {
+            var x, y, r;
+            var blockModel;
+            for(x = 0; x < this.properties.blockListX; x ++) {
                 this.models[x] = [];
-                for(var y = 0; y < this.properties.blockListY; y ++) {
+                for(y = 0; y < this.properties.blockListY; y ++) {
                     id = x + (y * this.properties.blockListX);
-                    var r = Math.round(Math.random() * 4);
-                    var blockModel = new ns.BlockModel({id: 'id' + x +'_'+ y, blockColor: r, blockX: x, blockY: y});
+                    r = Math.round(Math.random() * 4);
+                    blockModel = new ns.BlockModel({id: 'id' + x +'_'+ y, blockColor: r, blockX: x, blockY: y});
                     this.models[x][y] = blockModel;
                 }
             }
@@ -52,20 +54,22 @@ var DIAMONDDASH = DIAMONDDASH || {};
             var group = 0;                  //グループID定義
             var checkFlg = new Array(this.properties.blockListX);    //チェック済みか管理するフラグ配列定義（7×16）
             var erasableBlockCount = 0; //消せるブロックの数
-            for(var i = 0; i < this.properties.blockListX; i++) {
+            var x, y, i;
+            var firstFlg = 0;
+            var sameBlockCount = 0; //繋がっている同じブロックの総数
+            for(i = 0; i < this.properties.blockListX; i++) {
                 checkFlg[i] = new Array(this.properties.blockListX + 1);
             }
-            for(var y = (this.properties.blockListY / 2); y < this.properties.blockListY; y ++) {
-                for(var x = 0; x < this.properties.blockListX; x ++) {
+            for(y = (this.properties.blockListY / 2); y < this.properties.blockListY; y ++) {
+                for(x = 0; x < this.properties.blockListX; x ++) {
                     if(this.models[x][y] == undefined) continue;
                     this.models[x][y].set('erasable', false);
                     this.models[x][y].set('group', undefined);
                 }
             }
-            var firstFlg = 0;
-            for(var y = (this.properties.blockListY / 2); y < this.properties.blockListY; y ++) {
-                for(var x = 0; x < this.properties.blockListX; x ++) {
-                    var sameBlockCount = 0; //繋がっている同じブロックの総数
+            for(y = (this.properties.blockListY / 2); y < this.properties.blockListY; y ++) {
+                for(x = 0; x < this.properties.blockListX; x ++) {
+                    sameBlockCount = 0;
                     //周りのブロック判定メソッド
                     if(this.models[x][y] == undefined) continue;
                     (function checkAroundBlock(self,x,y) {
@@ -194,8 +198,9 @@ var DIAMONDDASH = DIAMONDDASH || {};
         blockListSet: function() {
             var lis = [];
             var id = 0;
-            for(var y = 0; y < this.collection.properties.blockListY; y ++) {
-                for(var x = 0; x < this.collection.properties.blockListX; x ++) {
+            var x, y;
+            for(y = 0; y < this.collection.properties.blockListY; y ++) {
+                for(x = 0; x < this.collection.properties.blockListX; x ++) {
                     lis[id] = new ns.BlockView(this.collection.models[x][y]);
                     lis[id].$el.addClass("type_" + lis[id].attributes.blockColor);
                     //消えるブロックを分かり易くする一時処理（デバッグ用）
@@ -212,8 +217,9 @@ var DIAMONDDASH = DIAMONDDASH || {};
         blockGroupDelete: function(event, self) {
             var deletedBlocks = []; //消したブロックの座標情報
             var i = 0;
-            for(var y = 0; y < this.collection.properties.blockListY; y ++) {
-                for(var x = 0; x < this.collection.properties.blockListX; x ++) {
+            var x, y;
+            for(y = 0; y < this.collection.properties.blockListY; y ++) {
+                for(x = 0; x < this.collection.properties.blockListX; x ++) {
                     // console.log(this.models[x][y].get('group'));
                     if(this.collection.models[x][y] == undefined) continue;
                     if(this.collection.models[x][y].get('group') == undefined) continue;
@@ -243,7 +249,8 @@ var DIAMONDDASH = DIAMONDDASH || {};
         setFallBlock: function(deletedBlocks) {
             var x = [];     //X座標毎の落下数を入れる配列
             var y_x = [];   //X座標毎の落下するブロックの座標を入れる配列
-            for(var i = 0; i < this.collection.properties.blockListX; i++) {
+            var i;
+            for(i = 0; i < this.collection.properties.blockListX; i++) {
                x[i] = 0;
                y_x[i] = [];
             }
