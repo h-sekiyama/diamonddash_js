@@ -28,7 +28,6 @@ var DIAMONDDASH = DIAMONDDASH || {};
         properties: {
             blockListX: 7,      //列の数
             blockListY: 16,     //行の数（表示するブロックの２倍）
-            gameScore: 0,       //スコア
             resetFlg: false  //消えるブロックがひとつもない時のリセット管理に使うフラグ
         },
         initialize: function(blockListView, restart) {
@@ -233,8 +232,7 @@ var DIAMONDDASH = DIAMONDDASH || {};
                 }
             }
             setTimeout(function() {$('#exp' + expId + '.explosion').remove();}, 600); //爆発エフェクト削除
-            this.collection.properties.gameScore += Math.pow(deletedBlocks.length, 3);
-            $('#score_status').text(this.collection.properties.gameScore);
+            var scoreView = new ns.ScoreStatusView(deletedBlocks);
             this.blockFall(deletedBlocks, self);
         },
         //ブロックの落下処理
@@ -392,7 +390,7 @@ var DIAMONDDASH = DIAMONDDASH || {};
         countDown: function() {
             var prop = this.properties;
             prop.sec--;
-            this.render(prop);
+            this.render();
             if(prop.sec == 0) {
                 ns.GameController.prototype.gameClear(this.collection);
             }
@@ -402,18 +400,50 @@ var DIAMONDDASH = DIAMONDDASH || {};
             this.properties.sec = 60;
             $('#time_status').html(60);
         },
-        render: function(prop) {
-            this.$el.html(prop.sec);
+        render: function() {
+            this.$el.html(this.properties.sec);
         }
     });
 })(this);
+
+/**
+ * スコア表示のView
+ * 
+ * 消したブロック数を引数に渡した場合は点数の加算
+ * 引数なしの場合はスコアのリセット（ゲーム終了時処理）
+ * 
+ */
+(function(window) {
+    var ns = window.DIAMONDDASH || {};
  
+    ns.ScoreStatusView = Backbone.View.extend({
+        properties: {
+            gameScore: 0,       //スコア
+            deletedBlocksCount: 0    //消したブロックの数
+        },
+        initialize: function(deletedBlocks) {
+            if(deletedBlocks != undefined) {
+                this.properties.deletedBlocksCount = deletedBlocks.length;
+                this.render();
+            } else {
+                $('#game_score').html(this.properties.gameScore);
+                this.properties.gameScore = 0;
+            }
+        },
+        render: function() {
+            this.properties.gameScore += Math.pow(this.properties.deletedBlocksCount, 3);
+            $('#score_status').text(this.properties.gameScore);
+        }
+    });
+})(this);
+
 /**
  * 全体のController
  * 各ビューは自身の振る舞い制御と、イベントをGameControllerへ通知
  * 
  * GameController
  * ├TimeStatusView
+ * ├ScoreStatusView
  * └BlockListView
  * 　└BlockView
  * 
@@ -480,10 +510,9 @@ var DIAMONDDASH = DIAMONDDASH || {};
             // gameClear処理
             this.properties.is_started = false;
             this.timeStatusView = new ns.TimeStatusView();
+            var scoreView = new ns.ScoreStatusView();
             this.timeStatusView.clear();
             $('#clear_scene').css('display', 'block');
-            $('#game_score').html(collection.properties.gameScore);
-            collection.properties.gameScore = 0;
             $('#score_status').html(0);
             setTimeout(function(){$('#onemore_button').css('display', 'inline-block');}, 1000);
         },
@@ -496,7 +525,7 @@ var DIAMONDDASH = DIAMONDDASH || {};
         }
     });
 })(this);
- 
+
 /**
  * GameController起動
  */
