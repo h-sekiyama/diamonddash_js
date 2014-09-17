@@ -164,8 +164,6 @@ var DIAMONDDASH = DIAMONDDASH || {};
     ns.BlockView = Backbone.View.extend({
         tagName: 'li',
         className: 'block',
-        initialize: function(options) {
-        },
         events: {
             'click': 'clickHandler',
         },
@@ -187,6 +185,7 @@ var DIAMONDDASH = DIAMONDDASH || {};
     var ns = window.DIAMONDDASH || {};
  
     ns.BlockListView = Backbone.View.extend({
+        el: $('#block_list'),
         initialize: function() {
             this.collection = new ns.BlockCollection();
             this.blockListSet();
@@ -371,6 +370,7 @@ var DIAMONDDASH = DIAMONDDASH || {};
     var ns = window.DIAMONDDASH || {};
  
     ns.TimeStatusView = Backbone.View.extend({
+        el: $('#time_status'),
         properties: {
             sec: 60,
             timerId: undefined
@@ -398,7 +398,7 @@ var DIAMONDDASH = DIAMONDDASH || {};
         clear: function() {
             this.stop();
             this.properties.sec = 60;
-            $('#time_status').html(60);
+            this.$el.html(60);
         },
         render: function() {
             this.$el.html(this.properties.sec);
@@ -417,6 +417,8 @@ var DIAMONDDASH = DIAMONDDASH || {};
     var ns = window.DIAMONDDASH || {};
  
     ns.ScoreStatusView = Backbone.View.extend({
+        el: $('#score_status'),
+        gameEl: $('#game_score'),
         properties: {
             gameScore: 0,       //スコア
             deletedBlocksCount: 0    //消したブロックの数
@@ -426,13 +428,14 @@ var DIAMONDDASH = DIAMONDDASH || {};
                 this.properties.deletedBlocksCount = deletedBlocks.length;
                 this.render();
             } else {
-                $('#game_score').html(this.properties.gameScore);
+                this.gameEl.html(this.properties.gameScore);
                 this.properties.gameScore = 0;
+                this.$el.html(0);
             }
         },
         render: function() {
             this.properties.gameScore += Math.pow(this.properties.deletedBlocksCount, 3);
-            $('#score_status').text(this.properties.gameScore);
+            this.$el.text(this.properties.gameScore);
         }
     });
 })(this);
@@ -453,11 +456,11 @@ var DIAMONDDASH = DIAMONDDASH || {};
         prop;
  
     ns.GameController = Backbone.View.extend({
+        el: $('#diamonddash'),
         properties: {
             is_started: false,
         },
-        initialize: function(options) {
-            this.options = options;
+        initialize: function() {
             this.initSceneView();
             this.initBlockListView();
             this.initTimeStatusView();
@@ -469,14 +472,10 @@ var DIAMONDDASH = DIAMONDDASH || {};
             $('#onemore_button').on('click', $.proxy(this.oneMorePlay, this));
         },
         initBlockListView: function() {
-            this.blockListView = new ns.BlockListView({
-                el: this.options.blockListEl
-            });
+            this.blockListView = new ns.BlockListView();
         },
         initTimeStatusView: function() {
-            this.timeStatusView = new ns.TimeStatusView({
-                el: this.options.timeStatusEl
-            });
+            this.timeStatusView = new ns.TimeStatusView();
         },
         gameStart: function() {
             var self = this;
@@ -513,7 +512,6 @@ var DIAMONDDASH = DIAMONDDASH || {};
             var scoreView = new ns.ScoreStatusView();
             this.timeStatusView.clear();
             $('#clear_scene').css('display', 'block');
-            $('#score_status').html(0);
             setTimeout(function(){$('#onemore_button').css('display', 'inline-block');}, 1000);
         },
         oneMorePlay: function() {
@@ -530,9 +528,5 @@ var DIAMONDDASH = DIAMONDDASH || {};
  * GameController起動
  */
 (function(window) {
-    var gameController = new DIAMONDDASH.GameController({
-        el: $('#diamonddash'),
-        blockListEl: $('#block_list'),
-        timeStatusEl: $('#time_status')
-    });
+    var gameController = new DIAMONDDASH.GameController();
 })(this);
