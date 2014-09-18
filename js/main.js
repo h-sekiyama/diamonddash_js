@@ -29,11 +29,14 @@ var DIAMONDDASH = DIAMONDDASH || {};
             blockListX: 7,      //列の数
             blockListY: 16,     //行の数（表示するブロックの２倍）
             resetFlg: false,    //消えるブロックがひとつもない時のリセット管理に使うフラグ
-            checkFlg: []        //ブロックのチェック済み判定管理用配列
         },
-        initialize: function(blockListView, restart) {
+        initialize: function(blockListView) {
             this.collection = this.createBlockModels();
-            this.updateErasables(blockListView, restart);
+            this.checkFlg = []; //ブロックのチェック済み判定管理用配列
+            this.group = 0;              //グループID定義
+            this.erasableBlockCount = 0; //消せるブロックの数
+            this.sameBlockCount = 0;    //隣接する同じブロックの数
+            this.updateErasables(blockListView);
         },
         //ブロックModelを作って返すメソッド
         createBlockModels: function() {
@@ -53,9 +56,9 @@ var DIAMONDDASH = DIAMONDDASH || {};
         //チェック済み管理用フラグ定義（初期化）
         initCheckFlg: function() {
             var i;
-            this.properties.checkFlg = new Array(this.properties.blockListX);
+            this.checkFlg = new Array(this.properties.blockListX);
             for(i=0; i<this.properties.blockListX; i++){
-                this.properties.checkFlg[i] = new Array(this.properties.blockListY)
+                this.checkFlg[i] = new Array(this.properties.blockListY)
             }
         },
         //全ブロックのグループID等初期化
@@ -70,93 +73,109 @@ var DIAMONDDASH = DIAMONDDASH || {};
             }
         },
         //ブロックが消えるかどうか判定
-        updateErasables: function(blockListView, restart) {
-            var group = 0;                  //グループID定義
-            var erasableBlockCount = 0; //消せるブロックの数
+        updateErasables: function(blockListView) {
             var x, y, i;
-            var sameBlockCount = 0; //繋がっている同じブロックの総数
+            this.group = 0;
+            this.erasableBlockCount = 0;
             this.initCheckFlg();
             this.initBlockGroup();
             for(y = (this.properties.blockListY / 2); y < this.properties.blockListY; y ++) {
                 for(x = 0; x < this.properties.blockListX; x ++) {
-                    sameBlockCount = 0;
-                    //周りのブロック判定メソッド
+                    this.sameBlockCount = 0;
                     if(this.models[x][y] == undefined) continue;
-                    (function checkAroundBlock(self,x,y) {
-                        //上のブロックと比較
-                        if(y > (self.properties.blockListY / 2) && self.models[x][y - 1] != undefined) {
-                            if(self.models[x][y].get('blockColor') == self.models[x][y - 1].get('blockColor')) {
-                                if(self.models[x][y - 1].get('group') == undefined && self.properties.checkFlg[x][y - 1] == undefined) {
-                                    self.properties.checkFlg[x][y - 1] = 1;
-                                    sameBlockCount ++;
-                                    if(sameBlockCount >= 3) {
-                                        self.models[x][y].set('group',group);
-                                        self.models[x][y - 1].set('group',group);
-                                        erasableBlockCount ++;
-                                    }
-                                    checkAroundBlock(self, x, y - 1);
-                                }
-                            }
-                        }
-                        //左のブロックと比較
-                        if(x > 0 && self.models[x - 1][y] != undefined) {
-                            if(self.models[x][y].get('blockColor') == self.models[x - 1][y].get('blockColor')) {
-                                if(self.models[x - 1][y].get('group') == undefined && self.properties.checkFlg[x - 1][y] == undefined) {
-                                    self.properties.checkFlg[x - 1][y] = 1;
-                                    sameBlockCount ++;
-                                    if(sameBlockCount >= 3) {
-                                        self.models[x][y].set('group',group);
-                                        self.models[x - 1][y].set('group',group);
-                                        erasableBlockCount ++;
-                                    }
-                                    checkAroundBlock(self, x - 1, y);
-                                }
-                            }
-                        }
-                        //右のブロックと比較
-                        if(x < self.properties.blockListX - 1 && self.models[x + 1][y] != undefined) {
-                            if(self.models[x][y].get('blockColor') == self.models[x + 1][y].get('blockColor')) {
-                                if(self.models[x + 1][y].get('group') == undefined && self.properties.checkFlg[x + 1][y] == undefined) {
-                                    self.properties.checkFlg[x + 1][y] = 1;
-                                    sameBlockCount ++;
-                                    if(sameBlockCount >= 3) {
-                                        self.models[x][y].set('group',group);
-                                        self.models[x + 1][y].set('group',group);
-                                        erasableBlockCount ++;
-                                    }
-                                    checkAroundBlock(self, x + 1, y);
-                                }
-                            }
-                        }
-                        //下のブロックと比較
-                        if(y < self.properties.blockListY - 1 && self.models[x][y + 1] != undefined) {
-                            if(self.models[x][y].get('blockColor') == self.models[x][y + 1].get('blockColor')) {
-                                if(self.models[x][y + 1].get('group') == undefined && self.properties.checkFlg[x][y + 1] == undefined) {
-                                    self.properties.checkFlg[x][y + 1] = 1;
-                                    sameBlockCount ++;
-                                    if(sameBlockCount >= 3) {
-                                        self.models[x][y].set('group',group);
-                                        self.models[x][y + 1].set('group',group);
-                                        erasableBlockCount ++;
-                                    }
-                                    checkAroundBlock(self, x, y + 1);
-                                }
-                            }
-                        }
-                        if(sameBlockCount >= 3) {
-                            self.models[x][y].set('group', group);
-                            self.models[x][y].set('erasable', true);
-                        }
-                    })(this,x,y);
-                    if(sameBlockCount >= 3) {
-                        group ++;
+                    this.checkAroundBlock(this, x, y);
+                    if(this.sameBlockCount >= 3) {
+                        this.group ++;
                     }
                 }
             }
-            if(erasableBlockCount == 0) {
+            this.blockReset(blockListView);
+        },
+        //周りのブロック判定メソッド
+        checkAroundBlock: function(self, x, y) {
+            self.checkTopBlock(self, x, y);
+            self.checkLeftBlock(self, x, y);
+            self.checkRightBlock(self, x, y);
+            self.checkBottomBlock(self, x, y);
+            if(self.sameBlockCount >= 3) {
+                self.models[x][y].set('group', self.group);
+                self.models[x][y].set('erasable', true);
+            }
+        },
+        //上のブロックと比較
+        checkTopBlock: function(self, x, y) {
+            if(y > (self.properties.blockListY / 2) && self.models[x][y - 1] != undefined) {
+                if(self.models[x][y].get('blockColor') == self.models[x][y - 1].get('blockColor')) {
+                    if(self.models[x][y - 1].get('group') == undefined && self.checkFlg[x][y - 1] == undefined) {
+                        self.checkFlg[x][y - 1] = 1;
+                        self.sameBlockCount ++;
+                        if(self.sameBlockCount >= 3) {
+                            self.models[x][y].set('group',self.group);
+                            self.models[x][y - 1].set('group',self.group);
+                            self.erasableBlockCount ++;
+                        }
+                        self.checkAroundBlock(self, x, y - 1);
+                    }
+                }
+            }
+        },
+        //左のブロックと比較
+        checkLeftBlock: function(self, x, y) {
+            if(x > 0 && self.models[x - 1][y] != undefined) {
+                if(self.models[x][y].get('blockColor') == self.models[x - 1][y].get('blockColor')) {
+                    if(self.models[x - 1][y].get('group') == undefined && self.checkFlg[x - 1][y] == undefined) {
+                        self.checkFlg[x - 1][y] = 1;
+                        self.sameBlockCount ++;
+                        if(self.sameBlockCount >= 3) {
+                            self.models[x][y].set('group',self.group);
+                            self.models[x - 1][y].set('group',self.group);
+                            self.erasableBlockCount ++;
+                        }
+                        self.checkAroundBlock(self, x - 1, y);
+                    }
+                }
+            }
+        },
+        //右のブロックと比較
+        checkRightBlock: function(self, x, y) {
+            if(x < self.properties.blockListX - 1 && self.models[x + 1][y] != undefined) {
+                if(self.models[x][y].get('blockColor') == self.models[x + 1][y].get('blockColor')) {
+                    if(self.models[x + 1][y].get('group') == undefined && self.checkFlg[x + 1][y] == undefined) {
+                        self.checkFlg[x + 1][y] = 1;
+                        self.sameBlockCount ++;
+                        if(self.sameBlockCount >= 3) {
+                            self.models[x][y].set('group',self.group);
+                            self.models[x + 1][y].set('group',self.group);
+                            self.erasableBlockCount ++;
+                        }
+                        self.checkAroundBlock(self, x + 1, y);
+                    }
+                }
+            }
+        },
+        //下のブロックと比較
+        checkBottomBlock: function(self, x, y) {
+            if(y < self.properties.blockListY - 1 && self.models[x][y + 1] != undefined) {
+                if(self.models[x][y].get('blockColor') == self.models[x][y + 1].get('blockColor')) {
+                    if(self.models[x][y + 1].get('group') == undefined && self.checkFlg[x][y + 1] == undefined) {
+                        self.checkFlg[x][y + 1] = 1;
+                        self.sameBlockCount ++;
+                        if(self.sameBlockCount >= 3) {
+                            self.models[x][y].set('group',self.group);
+                            self.models[x][y + 1].set('group',self.group);
+                            self.erasableBlockCount ++;
+                        }
+                        self.checkAroundBlock(self, x, y + 1);
+                    }
+                }
+            }
+        },
+        //消せるブロックがひとつもない場合の救済処置
+        blockReset: function(blockListView) {
+            if(this.erasableBlockCount == 0) {
                 alert('消せるブロックがひとつも無いので、シャッフルするよ！');
                 this.properties.resetFlg = true;
-                this.initialize(blockListView, restart);
+                this.initialize(blockListView);
             }
             if(blockListView != undefined && this.properties.resetFlg == true) {
                 setTimeout(function() {blockListView.$el.empty();}, 50);
@@ -228,7 +247,6 @@ var DIAMONDDASH = DIAMONDDASH || {};
             var x, y;
             for(y = 0; y < this.collection.properties.blockListY; y ++) {
                 for(x = 0; x < this.collection.properties.blockListX; x ++) {
-                    // console.log(this.models[x][y].get('group'));
                     if(this.collection.models[x][y] == undefined) continue;
                     if(this.collection.models[x][y].get('group') == undefined) continue;
                     if(this.collection.models[x][y].get('group') == self.attributes.group && this.collection.models[x][y].get('erasable') == true) {
