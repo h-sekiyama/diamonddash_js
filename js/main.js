@@ -69,12 +69,14 @@ var DIAMONDDASH = DIAMONDDASH || {};
                     if(this.models[x][y] == undefined) continue;
                     this.models[x][y].set('erasable', false);
                     this.models[x][y].set('group', undefined);
+                    $('#id' + x + '_' + y).removeClass('erasable_hint');
                 }
             }
         },
         //ブロックが消えるかどうか判定
         updateErasables: function(blockListView) {
-            var x, y, i;
+            var x, y;
+            var i = 0;
             this.group = 0;
             this.erasableBlockCount = 0;
             this.initCheckFlg();
@@ -86,6 +88,9 @@ var DIAMONDDASH = DIAMONDDASH || {};
                     this.checkAroundBlock(this, x, y);
                     if(this.sameBlockCount >= 3) {
                         this.group ++;
+                    }
+                    if(this.models[x][y].get('group') == 0) {
+                        $('#id' + x + '_' + y).addClass('erasable_hint');
                     }
                 }
             }
@@ -230,10 +235,6 @@ var DIAMONDDASH = DIAMONDDASH || {};
                 for(x = 0; x < this.collection.properties.blockListX; x ++) {
                     lis[id] = new ns.BlockView(this.collection.models[x][y]);
                     lis[id].$el.addClass("type_" + lis[id].attributes.blockColor);
-                    //消えるブロックを分かり易くする一時処理（デバッグ用）
-                    // if(lis[id].attributes.erasable == true) {
-                    //     lis[id].$el.addClass('erasable');
-                    // }
                     lis[id].listenTo(lis[id], 'blockClick', $.proxy(this.blockGroupDelete, this));
                     this.$el.append(lis[id].el);
                     id ++;
@@ -409,7 +410,7 @@ var DIAMONDDASH = DIAMONDDASH || {};
             timerId: undefined
         },
         initialize: function() {
-            this.collection = new ns.BlockCollection();
+            // this.collection = new ns.BlockCollection();
         },
         start: function() {
             var self = this;
@@ -425,7 +426,7 @@ var DIAMONDDASH = DIAMONDDASH || {};
             prop.sec--;
             this.render();
             if(prop.sec == 0) {
-                ns.GameController.prototype.gameClear(this.collection);
+                ns.GameController.prototype.gameClear();
             }
         },
         clear: function() {
@@ -538,7 +539,7 @@ var DIAMONDDASH = DIAMONDDASH || {};
             this.timeStatusView.start();
             $('#pause_scene').css('display', 'none');
         },
-        gameClear: function(collection) {
+        gameClear: function() {
             // gameClear処理
             this.properties.is_started = false;
             this.timeStatusView = new ns.TimeStatusView();

@@ -195,8 +195,9 @@ button {
 				background-image: url('../img/blocks.png');
 				background-position: -160px 0;
 			}
-			&.erasable {
-				opacity: 0.5;
+			&.erasable_hint {
+				-webkit-animation: hintEffect 1.0s infinite;
+			    -webkit-animation-delay: 5.0s;
 			}
 		}
 		@for $x from 0 through 6 {
@@ -222,6 +223,12 @@ button {
 	}
 }
 
+@-webkit-keyframes 'hintEffect' {
+     0% { opacity: 1.0; }
+    50% { opacity: 0.4; }
+     to { opacity: 1.0; }
+}
+
 @-webkit-keyframes 'expAnimation' {
      0% { background-position: 0px 0px; }
    6.0% { background-position: -64px 0px; }    
@@ -242,5 +249,5 @@ button {
   78.0% { background-position: -64px -192px; }    
   84.0% { background-position: -128px -192px; }    
   90.0% { background-position: -192px -192px; }
-  to { background-position: -256px -256px; }
+     to { background-position: -256px -256px; }
 }
