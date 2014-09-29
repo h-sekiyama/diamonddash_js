@@ -66,7 +66,7 @@ var DIAMONDDASH = DIAMONDDASH || {};
             var x, y;
             for(y = (this.properties.blockListY / 2); y < this.properties.blockListY; y ++) {
                 for(x = 0; x < this.properties.blockListX; x ++) {
-                    if(this.models[x][y] == undefined) continue;
+                    if(this.models[x][y] == undefined) {continue};
                     this.models[x][y].set('erasable', false);
                     this.models[x][y].set('group', undefined);
                 }
@@ -87,8 +87,8 @@ var DIAMONDDASH = DIAMONDDASH || {};
             for(y = (this.properties.blockListY / 2); y < this.properties.blockListY; y ++) {
                 for(x = 0; x < this.properties.blockListX; x ++) {
                     this.sameBlockCount = 0;
-                    if(this.models[x][y] == undefined) continue;
-                    this.checkAroundBlock(this, x, y);
+                    if(this.models[x][y] == undefined) {continue};
+                    this.checkAroundBlock(x, y);
                     if(this.sameBlockCount >= 3) {
                         this.group ++;
                     }
@@ -100,80 +100,80 @@ var DIAMONDDASH = DIAMONDDASH || {};
             this.blockReset(blockListView);
         },
         //周りのブロック判定メソッド
-        checkAroundBlock: function(self, x, y) {
-            self.checkTopBlock(self, x, y);
-            self.checkLeftBlock(self, x, y);
-            self.checkRightBlock(self, x, y);
-            self.checkBottomBlock(self, x, y);
-            if(self.sameBlockCount >= 3) {
-                self.models[x][y].set('group', self.group);
-                self.models[x][y].set('erasable', true);
+        checkAroundBlock: function(x, y) {
+            this.checkTopBlock(x, y);
+            this.checkLeftBlock(x, y);
+            this.checkRightBlock(x, y);
+            this.checkBottomBlock(x, y);
+            if(this.sameBlockCount >= 3) {
+                this.models[x][y].set('group', this.group);
+                this.models[x][y].set('erasable', true);
             }
         },
         //上のブロックと比較
-        checkTopBlock: function(self, x, y) {
-            if(y > (self.properties.blockListY / 2) && self.models[x][y - 1] != undefined) {
-                if(self.models[x][y].get('blockColor') == self.models[x][y - 1].get('blockColor')) {
-                    if(self.models[x][y - 1].get('group') == undefined && self.checkFlg[x][y - 1] == undefined) {
-                        self.checkFlg[x][y - 1] = 1;
-                        self.sameBlockCount ++;
-                        if(self.sameBlockCount >= 3) {
-                            self.models[x][y].set('group',self.group);
-                            self.models[x][y - 1].set('group',self.group);
-                            self.erasableBlockCount ++;
+        checkTopBlock: function(x, y) {
+            if(y > (this.properties.blockListY / 2) && this.models[x][y - 1] != undefined) {
+                if(this.models[x][y].get('blockColor') == this.models[x][y - 1].get('blockColor')) {
+                    if(this.models[x][y - 1].get('group') == undefined && this.checkFlg[x][y - 1] == undefined) {
+                        this.checkFlg[x][y - 1] = 1;
+                        this.sameBlockCount ++;
+                        if(this.sameBlockCount >= 3) {
+                            this.models[x][y].set('group',this.group);
+                            this.models[x][y - 1].set('group',this.group);
+                            this.erasableBlockCount ++;
                         }
-                        self.checkAroundBlock(self, x, y - 1);
+                        this.checkAroundBlock(x, y - 1);
                     }
                 }
             }
         },
         //左のブロックと比較
-        checkLeftBlock: function(self, x, y) {
-            if(x > 0 && self.models[x - 1][y] != undefined) {
-                if(self.models[x][y].get('blockColor') == self.models[x - 1][y].get('blockColor')) {
-                    if(self.models[x - 1][y].get('group') == undefined && self.checkFlg[x - 1][y] == undefined) {
-                        self.checkFlg[x - 1][y] = 1;
-                        self.sameBlockCount ++;
-                        if(self.sameBlockCount >= 3) {
-                            self.models[x][y].set('group',self.group);
-                            self.models[x - 1][y].set('group',self.group);
-                            self.erasableBlockCount ++;
+        checkLeftBlock: function(x, y) {
+            if(x > 0 && this.models[x - 1][y] != undefined) {
+                if(this.models[x][y].get('blockColor') == this.models[x - 1][y].get('blockColor')) {
+                    if(this.models[x - 1][y].get('group') == undefined && this.checkFlg[x - 1][y] == undefined) {
+                        this.checkFlg[x - 1][y] = 1;
+                        this.sameBlockCount ++;
+                        if(this.sameBlockCount >= 3) {
+                            this.models[x][y].set('group',this.group);
+                            this.models[x - 1][y].set('group',this.group);
+                            this.erasableBlockCount ++;
                         }
-                        self.checkAroundBlock(self, x - 1, y);
+                        this.checkAroundBlock(x - 1, y);
                     }
                 }
             }
         },
         //右のブロックと比較
-        checkRightBlock: function(self, x, y) {
-            if(x < self.properties.blockListX - 1 && self.models[x + 1][y] != undefined) {
-                if(self.models[x][y].get('blockColor') == self.models[x + 1][y].get('blockColor')) {
-                    if(self.models[x + 1][y].get('group') == undefined && self.checkFlg[x + 1][y] == undefined) {
-                        self.checkFlg[x + 1][y] = 1;
-                        self.sameBlockCount ++;
-                        if(self.sameBlockCount >= 3) {
-                            self.models[x][y].set('group',self.group);
-                            self.models[x + 1][y].set('group',self.group);
-                            self.erasableBlockCount ++;
+        checkRightBlock: function(x, y) {
+            if(x < this.properties.blockListX - 1 && this.models[x + 1][y] != undefined) {
+                if(this.models[x][y].get('blockColor') == this.models[x + 1][y].get('blockColor')) {
+                    if(this.models[x + 1][y].get('group') == undefined && this.checkFlg[x + 1][y] == undefined) {
+                        this.checkFlg[x + 1][y] = 1;
+                        this.sameBlockCount ++;
+                        if(this.sameBlockCount >= 3) {
+                            this.models[x][y].set('group',this.group);
+                            this.models[x + 1][y].set('group',this.group);
+                            this.erasableBlockCount ++;
                         }
-                        self.checkAroundBlock(self, x + 1, y);
+                        this.checkAroundBlock(x + 1, y);
                     }
                 }
             }
         },
         //下のブロックと比較
-        checkBottomBlock: function(self, x, y) {
-            if(y < self.properties.blockListY - 1 && self.models[x][y + 1] != undefined) {
-                if(self.models[x][y].get('blockColor') == self.models[x][y + 1].get('blockColor')) {
-                    if(self.models[x][y + 1].get('group') == undefined && self.checkFlg[x][y + 1] == undefined) {
-                        self.checkFlg[x][y + 1] = 1;
-                        self.sameBlockCount ++;
-                        if(self.sameBlockCount >= 3) {
-                            self.models[x][y].set('group',self.group);
-                            self.models[x][y + 1].set('group',self.group);
-                            self.erasableBlockCount ++;
+        checkBottomBlock: function(x, y) {
+            if(y < this.properties.blockListY - 1 && this.models[x][y + 1] != undefined) {
+                if(this.models[x][y].get('blockColor') == this.models[x][y + 1].get('blockColor')) {
+                    if(this.models[x][y + 1].get('group') == undefined && this.checkFlg[x][y + 1] == undefined) {
+                        this.checkFlg[x][y + 1] = 1;
+                        this.sameBlockCount ++;
+                        if(this.sameBlockCount >= 3) {
+                            this.models[x][y].set('group',this.group);
+                            this.models[x][y + 1].set('group',this.group);
+                            this.erasableBlockCount ++;
                         }
-                        self.checkAroundBlock(self, x, y + 1);
+                        this.checkAroundBlock(x, y + 1);
                     }
                 }
             }
@@ -246,13 +246,15 @@ var DIAMONDDASH = DIAMONDDASH || {};
         },
         //３つ以上隣接してるブロックグループを消去
         blockGroupDelete: function(event, self) {
+            console.log(this);
+            console.log(self);
             var deletedBlocks = []; //消したブロックの座標情報
             var i = 0;
             var x, y;
             for(y = 0; y < this.collection.properties.blockListY; y ++) {
                 for(x = 0; x < this.collection.properties.blockListX; x ++) {
-                    if(this.collection.models[x][y] == undefined) continue;
-                    if(this.collection.models[x][y].get('group') == undefined) continue;
+                    if(this.collection.models[x][y] == undefined) {continue};
+                    if(this.collection.models[x][y].get('group') == undefined) {continue};
                     if(this.collection.models[x][y].get('group') == self.attributes.group && this.collection.models[x][y].get('erasable') == true) {
                         var expTop = Number($('#id' + x + '_' + y).css('top').slice(0, -2)) - 10;
                         var expLeft = Number($('#id' + x + '_' + y).css('left').slice(0, -2)) - 10;
@@ -324,7 +326,6 @@ var DIAMONDDASH = DIAMONDDASH || {};
             var fallY_now;      //チェック中のブロックのY座標を入れる変数
             var fallY_min;      //そのX座標上で消えるブロック内で最小のY座標-1を入れる変数
             var fallCount;      //そのX軸上で落としたブロックの数を入れる変数
-            var tempY;          //ブロックの元のY位置(px)を記憶しておく変数
             var emptyBlocks = [];   //ブロック落下後に空白になる座標を入れる配列
             var addBlocks = []; //空白になった後にブロックが落下し、再び空でなくなった座標
             for(n = 0; n < this.collection.properties.blockListX; n ++) {
@@ -335,10 +336,9 @@ var DIAMONDDASH = DIAMONDDASH || {};
                     fallY_min = _.min(blockXY[1][n]) - 1; //そのX座標上で消えるブロック内で最小のY座標-1
                     fallCount = 0;  //そのX軸上で落としたブロックの数
                     for(fallY_now; fallY_now > fallY_min; fallY_now --) {
-                        if(this.collection.models[n][fallY_now] == undefined) continue;
-                        if(this.collection.models[n][fallY_now].get('group') == view.attributes.group) continue;
+                        if(this.collection.models[n][fallY_now] == undefined) {continue};
+                        if(this.collection.models[n][fallY_now].get('group') == view.attributes.group) {continue};
                         $('#id'+n+'_'+fallY_now).attr('id', 'id' + n + '_' + (fallY_max - fallCount)); //IDを更新
-                        tempY = this.collection.models[n][fallY_now].get('blockY')
                         this.collection.models[n][fallY_now].set('blockY', (fallY_max - fallCount));     //modelのY座標を更新
                         this.collection.models[n][fallY_now].set('id', 'id' + n + '_' + (fallY_max - fallCount));     //modelのIDを更新
                         this.collection.models[n][(fallY_max - fallCount)] = this.collection.models[n][fallY_now];  //落下先のブロックのmodelを上書き
@@ -349,9 +349,8 @@ var DIAMONDDASH = DIAMONDDASH || {};
                     }
                     for(fallY_min; fallY_min >= 0; fallY_min --) {
                         //そのX座標のブロックの内、消えたブロックの最小のYより上にあるブロックに対する落下処理
-                        if(this.collection.models[n][fallY_min] == undefined) continue;
+                        if(this.collection.models[n][fallY_min] == undefined) {continue};
                         $('#id'+n+'_'+fallY_min).attr('id', 'id' + n + '_' + (fallY_min + blockXY[0][n])); //IDを更新
-                        tempY = this.collection.models[n][fallY_min].get('blockY')
                         this.collection.models[n][fallY_min].set('blockY', (fallY_min + blockXY[0][n]));     //modelのY座標を更新
                         this.collection.models[n][fallY_min].set('id', 'id' + n + '_' + (fallY_min + blockXY[0][n]));     //modelのIDを更新
                         this.collection.models[n][(fallY_min + blockXY[0][n])] = this.collection.models[n][fallY_min];  //落下先のブロックのmodelを上書き
@@ -373,7 +372,6 @@ var DIAMONDDASH = DIAMONDDASH || {};
         },
         //消した分のブロックの追加
         blockMakeMargin: function(emptyBlocks) {
-            self = this;
             var addBlocksArray = [];
             _.each(emptyBlocks, function(num, index) {
                 addBlocksArray.push(num.split(","));
@@ -383,15 +381,15 @@ var DIAMONDDASH = DIAMONDDASH || {};
             var r;
             var blockModel;
             _.each(addBlocksArray, function(num, index) {
-                id = Number(num[0]) + (Number(num[1]) * self.collection.properties.blockListX);
+                id = Number(num[0]) + (Number(num[1]) * this.collection.properties.blockListX);
                 r = Math.round(Math.random() * 4);
                 blockModel = new ns.BlockModel({id: 'id' + Number(num[0]) +'_'+ Number(num[1]), blockColor: r, blockX: Number(num[0]), blockY: Number(num[1])});
-                self.collection.models[Number(num[0])][Number(num[1])] = blockModel;
+                this.collection.models[Number(num[0])][Number(num[1])] = blockModel;
                 lis[id] = new ns.BlockView(blockModel);
                 lis[id].$el.addClass("type_" + lis[id].attributes.blockColor);
-                lis[id].listenTo(lis[id], 'blockClick', $.proxy(self.blockGroupDelete, self));
-                self.$el.append(lis[id].el);
-            });
+                lis[id].listenTo(lis[id], 'blockClick', $.proxy(this.blockGroupDelete, this));
+                this.$el.append(lis[id].el);
+            }, this);
         }
     });
 })(this);
