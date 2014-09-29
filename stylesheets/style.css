@@ -167,8 +167,11 @@ button {
   border: 0;
   margin: -2px 0 -1px 0;
   transition-property: top;
+  -webkit-transition-property: top;
   transition-duration: 0.5s;
+  -webkit-transition-duration: 0.5s;
   transition-timing-function: ease-in;
+  -webkit-transition-timing-function: ease-in;
   position: absolute;
 }
 #diamonddash #block_list .block.type_0 {
@@ -194,6 +197,9 @@ button {
 #diamonddash #block_list .block.erasable_hint {
   -webkit-animation: hintEffect 1.0s infinite;
   -webkit-animation-delay: 5.0s;
+}
+#diamonddash #block_list .block.erasable_hint.paused {
+  -webkit-animation-play-state: paused;
 }
 #diamonddash #block_list #id0_0 {
   left: 0px;

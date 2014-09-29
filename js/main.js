@@ -28,7 +28,7 @@ var DIAMONDDASH = DIAMONDDASH || {};
         properties: {
             blockListX: 7,      //列の数
             blockListY: 16,     //行の数（表示するブロックの２倍）
-            resetFlg: false,    //消えるブロックがひとつもない時のリセット管理に使うフラグ
+            resetFlg: false    //消えるブロックがひとつもない時のリセット管理に使うフラグ
         },
         initialize: function(blockListView) {
             this.collection = this.createBlockModels();
@@ -69,7 +69,6 @@ var DIAMONDDASH = DIAMONDDASH || {};
                     if(this.models[x][y] == undefined) continue;
                     this.models[x][y].set('erasable', false);
                     this.models[x][y].set('group', undefined);
-                    $('#id' + x + '_' + y).removeClass('erasable_hint');
                 }
             }
         },
@@ -79,6 +78,10 @@ var DIAMONDDASH = DIAMONDDASH || {};
             var i = 0;
             this.group = 0;
             this.erasableBlockCount = 0;
+            _.each($('.erasable_hint'), function(elem, num, array) {
+                console.log(elem);
+                array.removeClass('erasable_hint'); //ヒントのついてるブロックのヒントを削除
+            });
             this.initCheckFlg();
             this.initBlockGroup();
             for(y = (this.properties.blockListY / 2); y < this.properties.blockListY; y ++) {
@@ -203,7 +206,7 @@ var DIAMONDDASH = DIAMONDDASH || {};
         tagName: 'li',
         className: 'block',
         events: {
-            'click': 'clickHandler',
+            'click': 'clickHandler'
         },
         clickHandler: function(event) {
             this.trigger('blockClick', event, this);
@@ -492,7 +495,7 @@ var DIAMONDDASH = DIAMONDDASH || {};
     ns.GameController = Backbone.View.extend({
         el: $('#diamonddash'),
         properties: {
-            is_started: false,
+            is_started: false
         },
         initialize: function() {
             this.initSceneView();
@@ -534,10 +537,16 @@ var DIAMONDDASH = DIAMONDDASH || {};
         gamePause: function() {
             this.timeStatusView.stop();
             $('#pause_scene').css('display', 'block');
+            _.each($('.erasable_hint'), function(elem, num, array) {
+                array.addClass('paused'); //ヒントのついてるブロックのヒントアニメを一時停止
+            });
         },
         gameRestart: function() {
             this.timeStatusView.start();
             $('#pause_scene').css('display', 'none');
+            _.each($('.paused'), function(elem, num, array) {
+                array.removeClass('paused'); //ヒント一時停止クラスのついてるブロックのヒントアニメを再開
+            });
         },
         gameClear: function() {
             // gameClear処理
@@ -547,6 +556,9 @@ var DIAMONDDASH = DIAMONDDASH || {};
             this.timeStatusView.clear();
             $('#clear_scene').css('display', 'block');
             setTimeout(function(){$('#onemore_button').css('display', 'inline-block');}, 1000);
+            _.each($('.erasable_hint'), function(elem, num, array) {
+                array.removeClass('erasable_hint'); //ヒントのついてるブロックのヒントを削除
+            });
         },
         oneMorePlay: function() {
             $('#count_down').html(3);
