@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" type="text/css" href="stylesheets/style.css" />
+	<link rel="stylesheet" type="text/css" href="stylesheets/reset.css" />
+	<title>DiamondDash</title>
+</head>
+<body>
+    <div id="start_scene" class="start_scene">
+        惑星クラッシュ<br>
+        <br>
+        <br>
+        <br>
+        Tap Start
+    </div>
+    <div id="countdown_scene" class="countdown_scene">
+        <span id="count_down">3</span>
+    </div>
+    <div id="pause_scene" class="pause_scene">
+        一時停止中<br>
+        タップすると再開するよ
+    </div>
+    <div id="clear_scene" class="clear_scene">
+        終了！！<br>
+        <br>
+        <br>
+        <br>
+        Score<br>
+        <span id="game_score">0</span><br>
+        <button id="onemore_button" class="onemore_button">もう一回あそぶ</button>
+    </div>
+	<div id="diamonddash">
+        <div class="front_top">
+    		<div id="time_status" class="time">60</div>
+            <div id="score_status" class="score">0</div>
+            <button id="pause_button" class="pause_button"></button>
+        </div>
+        <div class="front_left"></div>
+        <div class="front_right"></div>
+        <div class="front_bottom"></div>
+        <div class="back_space"></div>
+		<ul id="block_list"></ul>
+	</div>
+    <script src="js/jquery-2.1.0.min.js"></script>
+    <script src="js/underscore-min.js"></script>
+    <script src="js/backbone-min.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
